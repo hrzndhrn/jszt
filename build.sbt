@@ -4,7 +4,9 @@ lazy val root = (project in file(".")).settings(
   scalaVersion := "2.11.7",
 
   libraryDependencies ++= Seq(
-    "com.github.scopt" %% "scopt" % "3.3.0"
+    "com.github.scopt" %% "scopt" % "3.3.0",
+    "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
+    "com.typesafe" % "config" % "1.3.0"
   )
 )
 
