@@ -6,7 +6,8 @@ lazy val root = (project in file(".")).settings(
   libraryDependencies ++= Seq(
     "com.github.scopt" %% "scopt" % "3.3.0",
     "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
-    "com.typesafe" % "config" % "1.3.0"
+    "com.typesafe" % "config" % "1.3.0",
+    "org.mozilla" % "rhino" % "1.7.7"
   )
 )
 
