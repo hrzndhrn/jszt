@@ -12,15 +12,22 @@ class Scripts(val dir: File, val mainScriptName: String) {
     file => new Script(file)
   }
 
+  def getMainScript:Option[Script] = scripts.find { script =>
+    script.path.endsWith(mainScriptName)
+  }
+
   def debug = {
-    println(scripts(0).scriptOptions)
+    scripts.foreach {println(_)}
+    println("mainScript: " + mainScriptName)
+    println(getMainScript.getOrElse("-"))
   }
 }
 
 
 class Script(val file: File) {
-  println(file.getCanonicalPath)
   val content = read(file)
+
+  val path = file.getCanonicalPath
 
   val nodes = {
     val visitor = new NodeToListVisitor
@@ -46,13 +53,10 @@ class Script(val file: File) {
   }
 
   private def objectLiteralToMap(objectLiteral: AstNode):Map[String,Any] = {
-    println(objectLiteral.getAbsolutePosition)
-    println(objectLiteral.toSource)
     objectLiteral match {
       case obj: ObjectLiteral => {
         obj.getElements.asScala.toList map { property: ObjectProperty =>
           val name = property.getLeft.asInstanceOf[Name].getIdentifier
-          println(property.getRight.getClass.getSimpleName)
           property.getRight match {
             case array: ArrayLiteral => (name -> arrayLiteralToList(array))
             case string: StringLiteral => (name -> string.getValue)
@@ -75,10 +79,12 @@ class Script(val file: File) {
 
   private def keywordToValue(keyword:KeywordLiteral):Any = {
     if (keyword.isBooleanLiteral) {
-      keyword == Token.TRUE
+      keyword.getType == Token.TRUE
     }
     else {
       null
     }
   }
+
+  override def toString = scriptOptions.mkString(", ")
 }
