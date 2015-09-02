@@ -9,22 +9,41 @@ import scala.collection.JavaConverters._
 
 class Scripts(val dir: File, val mainScriptName: String) {
   private val scripts = listJsFilesInTree(dir) map {
-    file => new Script(file)
+    file => new Script(this, file)
   }
 
-  def getMainScript:Option[Script] = scripts.find { script =>
+  def getMainScript:Script = scripts.find { script =>
     script.path.endsWith(mainScriptName)
-  }
+  }.get
 
   def debug = {
     scripts.foreach {println(_)}
     println("mainScript: " + mainScriptName)
-    println(getMainScript.getOrElse("-"))
+    // println(getMainScript.getOrElse("-"))
+    println("-------------")
+    // println(getMainScript.pack)
+    val pack = getMainScript.pack(List(getMainScript.name)).distinct
+    pack.foreach({p => println(p) })
+    println("--------")
+    val pack2 = get("lib.jsz.core.dom").pack(List(getMainScript.name)).distinct
+    pack2.foreach({p => println(p) })
+    println("--------")
+    val pack3 = get("demo.lightsOut").pack(List(getMainScript.name)).distinct
+    pack3.foreach({p => println(p) })
+    println("--------")
+    val pack4 = get("test.jsz.observer").pack(List(getMainScript.name)).distinct
+    pack4.foreach({p => println(p) })
+
+    println(pack == pack2)
+  }
+
+  def get(name:String):Script = {
+    scripts.find({ script => script.name == name}).get
   }
 }
 
 
-class Script(val file: File) {
+class Script(val scripts:Scripts, val file: File) {
   val content = read(file)
 
   val path = file.getCanonicalPath
@@ -38,6 +57,22 @@ class Script(val file: File) {
 
   val scriptNode = getFunctionCallsByName("script").head
   val scriptOptions = objectLiteralToMap(scriptNode.getArguments.get(0))
+  val name = scriptOptions.getOrElse("name", "").toString
+  val require = scriptOptions.get("require") match {
+    case Some(list:List[Any]) => list map {_.toString}
+    case _ => List[String]()
+  }
+
+  def pack(list:List[String]):List[String] = {
+    //  val reqs = list ++ require
+    def packIt(l:List[String]):List[String] = {
+      { l flatMap({
+        req => scripts.get(req).pack(List())
+      })} ++ l
+    }
+
+    packIt(list) ++ packIt(require)
+  }
 
   private def getFunctionCallsByName(callName: String): List[FunctionCall] = {
     nodes.filter({ node => node match {
@@ -86,5 +121,7 @@ class Script(val file: File) {
     }
   }
 
-  override def toString = scriptOptions.mkString(", ")
+  override def toString =
+    scriptOptions.mkString(", ")
+    // path
 }
