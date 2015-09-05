@@ -1,6 +1,6 @@
 package jszt
 
-import java.io.File
+import java.io.{FileOutputStream, BufferedWriter, FileWriter, File}
 
 import scala.io.Source
 
@@ -36,9 +36,17 @@ object io {
 
   def jsztFilter(file:File) = {
     val path = file.getCanonicalPath
-    !path.endsWith("min.js") && !path.endsWith("pack.js")
+    (    !path.endsWith("min.js")
+      && !path.endsWith("pack.js")
+      && !path.endsWith("dev.js"))
   }
 
   def read(file:File) = Source.fromFile(file).getLines.mkString("\n")
+
+  def write(file:File, text:String) = {
+    val out = new FileOutputStream(file, false);
+    out.write(text.getBytes)
+    out.close()
+  }
 
 }

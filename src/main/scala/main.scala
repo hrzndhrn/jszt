@@ -1,10 +1,14 @@
 import java.io.File
+import java.util
 
 import com.typesafe.config.{Config, ConfigValueFactory, ConfigFactory}
 import jszt.{Scripts, Options}
 import scopt._
 import jszt.io.{exists, listFilesInDir, listJsFilesInTree, read}
 import java.nio.file.Paths
+import scala.collection.JavaConverters._
+import scala.collection.mutable
+
 
 object main {
   def main(args: Array[String]) = {
@@ -41,7 +45,7 @@ object main {
 
   private def run(config:Config):Unit = {
     val project:Config = config.getConfig("project")
-    println(project.root().render())
+    // println(project.root().render())
 
     val dir = new File(project.getString("dir"))
     val libPath = project.getString("libPath")
@@ -49,7 +53,26 @@ object main {
       .get(libPath, project.getString("mainScript")).toString
 
     val scripts = new Scripts(dir, mainScriptName)
-    scripts.debug
+    // scripts.debug
+    // val concats =
+
+
+    project.getConfigList("concat").asScala foreach { concat:Config =>
+      scripts.concat(
+        concat.getString("script"),
+        concat.getStringList("scripts").asScala.toList,
+        concat.getBoolean("infos"),
+        concat.getString("preamble")
+      ).save
+    }
+
+    scripts.pack("lib.jsz.core")
+    scripts.pack("demo.jsz.loadedScripts")
+
+/*
+    concats.forEach({
+      con: Config => println(con) //
+    });*/
   }
 
 
