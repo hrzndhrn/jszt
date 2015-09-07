@@ -8,7 +8,7 @@ lazy val root = (project in file(".")).settings(
     "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.4",
     "com.typesafe" % "config" % "1.3.0",
     "org.mozilla" % "rhino" % "1.7.7",
-    "com.google.javascript" % "closure-compiler" % "r1741"
+    "com.google.javascript" % "closure-compiler" % "v20141023"
   )
 )
 

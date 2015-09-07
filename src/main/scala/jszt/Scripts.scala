@@ -1,11 +1,13 @@
 package jszt
 
 import java.io.File
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode
 import io.{listJsFilesInTree, read, write}
 import org.mozilla.javascript.Token
 import org.mozilla.javascript.ast._
 import rhino.{parser, NodeToListVisitor}
 import scala.collection.JavaConverters._
+import com.google.javascript.jscomp.{Compiler, CompilerOptions, CompilationLevel, SourceFile}
 
 class Scripts(val dir: File, val mainScriptName: String) {
   private val scripts = listJsFilesInTree(dir) map {
@@ -180,6 +182,14 @@ class Script(val scripts: Scripts, val file: File, con: Option[String]) {
     (packIt(list) ++ packIt(require) ++ List(name)).distinct
   }
 
+  val jsPrefixRegEx = """.js$""".r
+
+  def minify:Script =
+    Script(
+      scripts,
+      jsPrefixRegEx.replaceAllIn( file.getCanonicalPath, ".min.js"),
+      closure.minify(content))
+
   private def getFunctionCallsByName(callName: String): List[FunctionCall] = {
     nodes.filter({ node => node match {
       case node: FunctionCall => {
@@ -202,6 +212,14 @@ class Script(val scripts: Scripts, val file: File, con: Option[String]) {
             case array: ArrayLiteral => (name -> arrayLiteralToList(array))
             case string: StringLiteral => (name -> string.getValue)
             case keyword: KeywordLiteral => (name -> keywordToValue(keyword))
+            case unary: UnaryExpression => {
+              unary.toSource() match {
+                case "!0" => (name -> true)
+                case "!1" => (name -> false)
+                case _ => (name -> unary)
+              }
+            }
+            case node => (name -> node)
           }
         }
       }.toMap
@@ -248,4 +266,34 @@ object Script {
 
   def apply(scripts: Scripts, fileName:String, content: String) =
     new Script(scripts, new File(scripts.dir, fileName), Some(content))
+}
+
+object closure {
+  def minify(code:String):String = {
+    val compiler = new Compiler
+    compiler.disableThreads
+
+    val options = new CompilerOptions
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options)
+    options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT)
+
+    val extern = SourceFile.builder.buildFromCode("extern.js", "")
+    val input = SourceFile.builder.buildFromCode( "input.js", code)
+
+    var min:String = ""
+    try {
+      compiler.compile( extern, input, options)
+      min = compiler.toSource
+    }
+    catch {
+      case e: Exception => println("exception caught: " + e);
+    }
+
+    // compiler.finalize
+    println("--- minify ---")
+    // println(min)
+    // println("--------------")
+    min
+
+  }
 }
