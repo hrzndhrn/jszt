@@ -44,12 +44,15 @@ object io {
   def read(file:File) = Source.fromFile(file).getLines.mkString("\n")
 
   def write(file:File, text:String) = {
-    val out = new FileOutputStream(file, false);
-    out.write(text.getBytes)
-    out.close()
-
-
-
+    try {
+      val out = new FileOutputStream(file, false)
+      out.write(text.getBytes)
+      out.close()
+    }
+    catch {
+      case error:Exception =>
+        throw new RuntimeException(s"Write file ${file.getCanonicalPath} failed!")
+    }
   }
 
 }

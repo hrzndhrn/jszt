@@ -1,6 +1,6 @@
 lazy val root = (project in file(".")).settings(
   name := "jszt",
-  version := "0.0.0",
+  version := "0.0.2",
   scalaVersion := "2.11.7",
 
   libraryDependencies ++= Seq(
