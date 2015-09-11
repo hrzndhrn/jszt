@@ -57,14 +57,17 @@ object main {
       ).save
     }
 
+    /*
     scripts.get("lib.jsz.core")
       .pack.save
       .minify.save
+    */
 
+    /*
     scripts.get("demo.jsz.loadedScripts")
       .pack.save
       .minify.save
-
+    */
   }
 
 }
